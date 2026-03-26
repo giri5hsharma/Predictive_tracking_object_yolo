@@ -33,10 +33,10 @@ CFG = {
     "detect_interval": 3,
     "confidence_threshold": 0.40,
     "target_classes": [39, 47, 67],  # 39=bottle, 47=apple, 67=cell phone
-    "dead_zone_px": 25,
-    "pid_kp": 0.08,
-    "pid_ki": 0.001,
-    "pid_kd": 0.04,
+    "dead_zone_px": 5,
+    "pid_kp": 0.15,        # Lowered so it smoothly glides to the target
+    "pid_ki": 0.000,       # Turned off to prevent mathematical "windup"
+    "pid_kd": 0.005,       # Drastically lowered to prevent the explosion!
     "alpha_decay": 0.05,
     "alpha_rise": 0.6,
     "manual_speed": 8,
@@ -80,10 +80,17 @@ class KalmanTracker:
 
     def predict(self):
         pred = self.kf.predict()
-        return int(pred[0][0]), int(pred[1][0])
+        px, py = int(pred[0][0]), int(pred[1][0])
+
+        # Prevent the prediction from flying off into infinity when lost
+        px = max(0, min(CFG["frame_width"], px))
+        py = max(0, min(CFG["frame_height"], py))
+
+        return px, py
 
     def correct(self, x, y):
         measurement = np.array([[np.float32(x)], [np.float32(y)]])
+        self.kf.correct(measurement)
         self.kf.correct(measurement)
         self.initialized = True
 
@@ -164,12 +171,20 @@ class GimbalTracker:
         self.pid = PIDController(CFG["pid_kp"], CFG["pid_ki"], CFG["pid_kd"])
         self.gimbal_pos = np.array([self.cx, self.cy], dtype=np.float64)
 
+        # State
         self.frame_count = 0
         self.lost_frames = 0
         self.last_bbox = None
         self.mode = "SEARCH"
+
+        # NEW: Timer to track how long the object has been lost
+        self.last_seen_time = time.time()
+
         self.alpha = 0.0
         self.manual_delta = np.zeros(2, dtype=np.float64)
+
+        # NEW: Memory bank for smooth continuous WASD movement
+        self.key_states = {'w': 0, 'a': 0, 's': 0, 'd': 0}
 
         self.pred_trail = deque(maxlen=40)
         self.actual_trail = deque(maxlen=40)
@@ -227,20 +242,33 @@ class GimbalTracker:
         return [[x1, y1, x2, y2, 0.88, 0]]
 
     def _handle_keys(self, key):
-        manual_speed = CFG["manual_speed"]
-        delta = np.zeros(2, dtype=np.float64)
-        moved = False
+        now = time.time()
 
-        if key == ord('a') or key == 81: delta[0] = -manual_speed; moved = True
-        if key == ord('d') or key == 83: delta[0] = manual_speed; moved = True
-        if key == ord('w') or key == 82: delta[1] = -manual_speed; moved = True
-        if key == ord('s') or key == 84: delta[1] = manual_speed; moved = True
+        # 1. Update the timestamp for whichever key is currently pressed
+        if key == ord('a') or key == 81: self.key_states['a'] = now
+        if key == ord('d') or key == 83: self.key_states['d'] = now
+        if key == ord('w') or key == 82: self.key_states['w'] = now
+        if key == ord('s') or key == 84: self.key_states['s'] = now
 
         if key == ord('r'):
             self.pid.reset()
             self.alpha = 0.0
             print("[INFO] Reset.")
 
+        # 2. Calculate smooth movement based on recent keys
+        manual_speed = CFG["manual_speed"]
+        delta = np.zeros(2, dtype=np.float64)
+        moved = False
+
+        # Grace period: 50ms (0.05) bridges the gap between OS keyboard signals
+        timeout = 0.01
+
+        if now - self.key_states['a'] < timeout: delta[0] -= manual_speed; moved = True
+        if now - self.key_states['d'] < timeout: delta[0] += manual_speed; moved = True
+        if now - self.key_states['w'] < timeout: delta[1] -= manual_speed; moved = True
+        if now - self.key_states['s'] < timeout: delta[1] += manual_speed; moved = True
+
+        # 3. Apply the movement
         if moved:
             self.manual_delta = delta
             self.alpha = min(1.0, self.alpha + CFG["alpha_rise"])
@@ -258,7 +286,9 @@ class GimbalTracker:
             error = np.zeros(2)
 
         auto_output = self.pid.update(error)
-        ai_weight = (1.0 - self.alpha) * min(confidence, 1.0)
+        # FIX: Remove the confidence multiplier so the gimbal faithfully follows
+        # the yellow Kalman prediction even when the object is hidden!
+        ai_weight = 1.0 - self.alpha
         final = self.alpha * self.manual_delta + ai_weight * auto_output
 
         # Update position
@@ -293,6 +323,9 @@ class GimbalTracker:
         demo_t = 0.0
         last_confidence = 0.0
 
+        # Initialize the lost timer right before we start tracking
+        self.last_seen_time = time.time()
+
         while True:
             t_start = time.time()
 
@@ -320,14 +353,29 @@ class GimbalTracker:
                     self.last_bbox = (x1, y1, x2, y2, conf, cls_id)
                     last_confidence = conf
                     self.lost_frames = 0
+
+                    # Target found! Reset the stopwatch.
+                    self.last_seen_time = time.time()
+
                     self.mode = "MANUAL" if self.alpha > 0.3 else "AUTO"
                 else:
                     self.lost_frames += 1
                     last_confidence = max(0.0, last_confidence - 0.05)
-                    if self.lost_frames > 5: self.mode = "RE-ACQUIRE"
-                    if self.lost_frames > CFG["max_lost_frames"]:
+
+                    # Calculate how long the object has been missing
+                    time_lost = time.time() - self.last_seen_time
+
+                    if time_lost > 5.0:
+                        # 5 SECONDS PASSED: Return to center
                         self.mode = "SEARCH"
                         self.last_bbox = None
+
+                        # Snap the predictive yellow dot back to the absolute center (0,0)
+                        # The PID controller will automatically drag the blue crosshair back to it!
+                        self.kalman.kf.statePost = np.array([[self.cx], [self.cy], [0], [0]], dtype=np.float32)
+
+                    elif self.lost_frames > 5:
+                        self.mode = "RE-ACQUIRE"
 
             pred_x, pred_y = self.kalman.predict()
             self.pred_trail.append((pred_x, pred_y))
