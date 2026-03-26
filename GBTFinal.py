@@ -23,6 +23,7 @@ import time
 import argparse
 import sys
 from collections import deque
+import tkinter as tk  # <--- NEW IMPORT
 
 # ─────────────────────────────────────────────────────────────
 # CONFIGURATION
@@ -519,6 +520,53 @@ class GimbalTracker:
 
         return sb
 
+
+# ─────────────────────────────────────────────────────────────
+# STARTUP GUI
+# ─────────────────────────────────────────────────────────────
+def select_target_gui():
+    root = tk.Tk()
+    root.title("Gimbal Tracker Setup")
+    root.geometry("320x250")
+
+    # Center the window on the screen
+    root.eval('tk::PlaceWindow . center')
+
+    tk.Label(root, text="Select Target Mode:", font=("Helvetica", 14, "bold")).pack(pady=15)
+
+    # Variable to store the user's choice (default is "all")
+    choice_var = tk.StringVar(value="all")
+
+    # Options menu
+    tk.Radiobutton(root, text="Open to All (Bottle, Apple, Phone)", variable=choice_var, value="all",
+                   font=("Helvetica", 11)).pack(anchor="w", padx=30, pady=2)
+    tk.Radiobutton(root, text="Bottle Only", variable=choice_var, value="bottle", font=("Helvetica", 11)).pack(
+        anchor="w", padx=30, pady=2)
+    tk.Radiobutton(root, text="Apple Only", variable=choice_var, value="apple", font=("Helvetica", 11)).pack(anchor="w",
+                                                                                                             padx=30,
+                                                                                                             pady=2)
+    tk.Radiobutton(root, text="Cell Phone Only", variable=choice_var, value="phone", font=("Helvetica", 11)).pack(
+        anchor="w", padx=30, pady=2)
+
+    def on_start():
+        val = choice_var.get()
+        if val == "bottle":
+            CFG["target_classes"] = [39]
+        elif val == "apple":
+            CFG["target_classes"] = [47]
+        elif val == "phone":
+            CFG["target_classes"] = [67]
+        else:
+            CFG["target_classes"] = [39, 47, 67]  # All
+
+        print(f"[INFO] Target Classes Updated: {CFG['target_classes']}")
+        root.destroy()  # Close UI and let the main script continue
+
+    tk.Button(root, text="Start Tracking", command=on_start, bg="#00C853", fg="black", font=("Helvetica", 12, "bold"),
+              width=15).pack(pady=20)
+
+    root.mainloop()
+
 def parse_args():
     ap = argparse.ArgumentParser()
     ap.add_argument("--source", default="0")
@@ -526,9 +574,15 @@ def parse_args():
     ap.add_argument("--no-yolo", action="store_true")
     return ap.parse_args()
 
+
 if __name__ == "__main__":
     args = parse_args()
     source = "demo" if args.demo else args.source
     use_yolo = not args.no_yolo and source != "demo"
+
+    # 1. SHOW THE UI POPUP FIRST
+    select_target_gui()
+
+    # 2. START THE SYSTEM (It will use the updated targets!)
     tracker = GimbalTracker(source=source, use_yolo=use_yolo)
     tracker.run()
