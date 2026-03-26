@@ -206,13 +206,51 @@ class GimbalTracker:
     def _open_camera(self):
         if self.source == "demo":
             return True
+
         try:
-            self.cap = cv2.VideoCapture(int(self.source))
+            source_int = int(self.source)
+
+            # ==========================================================
+            # CROSS-PLATFORM CAMERA SETUP
+            # Automatically detects your OS to prevent OpenCV camera crashes!
+            # ==========================================================
+            if sys.platform.startswith('win'):
+                # WINDOWS: DirectShow (Fastest startup, prevents freezing)
+                print("[INFO] Windows detected. Using DirectShow backend.")
+                self.cap = cv2.VideoCapture(source_int, cv2.CAP_DSHOW)
+
+            elif sys.platform.startswith('darwin'):
+                # MAC: AVFoundation (Prevents macOS privacy blocks)
+                print("[INFO] macOS detected. Using AVFoundation backend.")
+                self.cap = cv2.VideoCapture(source_int, cv2.CAP_AVFOUNDATION)
+
+            elif sys.platform.startswith('linux'):
+                # LINUX: Video4Linux (Standard for Linux / Raspberry Pi)
+                print("[INFO] Linux detected. Using V4L2 backend.")
+                self.cap = cv2.VideoCapture(source_int, cv2.CAP_V4L2)
+
+            else:
+                # UNIVERSAL FALLBACK
+                print("[INFO] OS not recognized. Using default camera backend.")
+                self.cap = cv2.VideoCapture(source_int)
+
+            # ─────────────────────────────────────────────────────────
+            # MANUAL OVERRIDE (If the auto-detect fails, comment out
+            # the IF block above and uncomment ONE of the lines below)
+            # ─────────────────────────────────────────────────────────
+            # self.cap = cv2.VideoCapture(source_int, cv2.CAP_DSHOW)        # Windows
+            # self.cap = cv2.VideoCapture(source_int, cv2.CAP_AVFOUNDATION) # Mac
+            # self.cap = cv2.VideoCapture(source_int, cv2.CAP_V4L2)         # Linux
+            # self.cap = cv2.VideoCapture(source_int)                       # Universal Default
+
         except ValueError:
+            # If the source is a file path instead of a webcam number (e.g., "video.mp4")
             self.cap = cv2.VideoCapture(self.source)
+
         if not self.cap.isOpened():
             print(f"[ERROR] Cannot open source: {self.source}")
             return False
+
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.W)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.H)
         return True
