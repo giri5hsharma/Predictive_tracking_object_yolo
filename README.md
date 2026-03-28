@@ -25,7 +25,7 @@ The repository includes the full Python tracking stack, 3D mechanical renders fo
 The software is written in Python and optimized for standard laptops without requiring a dedicated GPU.
 
 1. Clone the repository:
-   git clone https://github.com/yourusername/your-repo-name.git
+   git clone https://github.com/giri5hsharma/Predictive_tracking_object_yolo.git
    cd your-repo-name
 
 2. Install the required dependencies:
