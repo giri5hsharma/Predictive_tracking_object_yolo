@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4WD GimbalBot — Fixed Build</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #06080d;
+            --panel: #0b0d14;
+            --border: #141a28;
+            --green: #00ff88;
+            --cyan: #00e5ff;
+            --warn: #ff8c00;
+            --red: #ff3355;
+            --text: #8899bb;
+            --bright: #ddeeff;
+            --gold: #e8aa00;
+            --lime: #aadd44;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ══ HEADER ══ */
+        .header {
+            height: 42px;
+            background: #030508;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 14px;
+            flex-shrink: 0;
+            z-index: 30;
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--lime);
+            letter-spacing: 3px;
+            text-shadow: 0 0 16px rgba(170, 221, 68, 0.4);
+        }
+
+        .logo em {
+            color: var(--cyan);
+            font-style: normal;
+        }
+
+        .hdr-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 10px;
+        }
+
+        .hs {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+
+        .hsd {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+
+        .hsd.g {
+            background: var(--green);
+            box-shadow: 0 0 5px var(--green);
+            animation: blink 1.4s ease infinite;
+        }
+
+        .hsd.c {
+            background: var(--cyan);
+            box-shadow: 0 0 5px var(--cyan);
+        }
+
+        .hsd.w {
+            background: var(--warn);
+            box-shadow: 0 0 5px var(--warn);
+            animation: blink 2s ease infinite;
+        }
+
+        @keyframes blink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.35;
+            }
+        }
+
+        /* ══ WORKSPACE ══ */
+        .workspace {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* ══ PANELS ══ */
+        .lp,
+        .rp {
+            width: 200px;
+            background: var(--panel);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            overflow-y: auto;
+            max-height: calc(100vh - 62px);
+            /* Prevents UI cutoff on small screens */
+        }
+
+        .lp {
+            border-right: 1px solid var(--border);
+            width: 188px;
+        }
+
+        .rp {
+            border-left: 1px solid var(--border);
+        }
+
+        .lp::-webkit-scrollbar,
+        .rp::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        .lp::-webkit-scrollbar-thumb,
+        .rp::-webkit-scrollbar-thumb {
+            background: #1a2a3a;
+        }
+
+        .sec {
+            border-bottom: 1px solid var(--border);
+            padding: 10px 11px;
+        }
+
+        .sec-t {
+            font-size: 8px;
+            letter-spacing: 2px;
+            color: var(--cyan);
+            opacity: 0.7;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .gpair {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 6px;
+        }
+
+        .mg {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            padding: 6px;
+            text-align: center;
+        }
+
+        .mgl {
+            font-size: 7px;
+            opacity: 0.4;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        .mgv {
+            font-family: 'Orbitron', monospace;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .mgu {
+            font-size: 7px;
+            opacity: 0.35;
+        }
+
+        .brow {
+            margin-bottom: 6px;
+        }
+
+        .brl {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            margin-bottom: 2px;
+        }
+
+        .brl span:last-child {
+            color: var(--green);
+        }
+
+        .bt {
+            height: 3px;
+            background: var(--border);
+            border-radius: 2px;
+        }
+
+        .bf {
+            height: 100%;
+            border-radius: 2px;
+            transition: width 0.1s;
+        }
+
+        .dr {
+            display: flex;
+            justify-content: space-between;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(20, 26, 40, 0.8);
+            font-size: 9px;
+        }
+
+        .dl {
+            opacity: 0.4;
+        }
+
+        .dv {
+            color: var(--bright);
+            font-family: 'Orbitron', monospace;
+            font-size: 8px;
+        }
+
+        .dv.g {
+            color: var(--green);
+        }
+
+        .dv.c {
+            color: var(--cyan);
+        }
+
+        .dv.w {
+            color: var(--warn);
+        }
+
+        .dv.r {
+            color: var(--red);
+        }
+
+        /* ══ VIEWPORT ══ */
+        .vp {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(ellipse at center, #0e1218 0%, #060810 100%);
+            overflow: hidden;
+        }
+
+        #c3d {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .vp::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.025) 2px, rgba(0, 0, 0, 0.025) 4px);
+        }
+
+        /* ══ VIEW BUTTONS ══ */
+        .vbtns {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            z-index: 10;
+        }
+
+        .vb {
+            background: rgba(6, 8, 13, 0.88);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 9px;
+            font-family: 'Share Tech Mono', monospace;
+            padding: 5px 9px;
+            cursor: pointer;
+            transition: all 0.15s;
+            letter-spacing: 1px;
+            text-align: left;
+        }
+
+        .vb:hover,
+        .vb.on {
+            border-color: var(--lime);
+            color: var(--lime);
+            background: rgba(170, 221, 68, 0.07);
+        }
+
+        .vb.cyan-btn {
+            border-color: var(--border);
+        }
+
+        .vb.cyan-btn:hover,
+        .vb.cyan-btn.on {
+            border-color: var(--cyan);
+            color: var(--cyan);
+            background: rgba(0, 229, 255, 0.07);
+        }
+
+        /* ══ CAMERA FEED ══ */
+        .camfeed {
+            position: absolute;
+            bottom: 8px;
+            left: 8px;
+            width: 256px;
+            background: rgba(6, 8, 13, 0.94);
+            border: 1px solid var(--border);
+            z-index: 10;
+        }
+
+        .cftop {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 9px;
+            border-bottom: 1px solid var(--border);
+            font-size: 8px;
+        }
+
+        .recdot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: #ff2244;
+            box-shadow: 0 0 5px #ff2244;
+            animation: blink 1s ease infinite;
+            display: inline-block;
+            margin-right: 4px;
+        }
+
+        #cam-cvs {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4/3;
+        }
+
+        /* ══ HUDs ══ */
+        .motor-hud {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 148px;
+            background: rgba(6, 8, 13, 0.88);
+            border: 1px solid #1a2a1a;
+            padding: 10px;
+            z-index: 10;
+        }
+
+        .speed-hud {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 140px;
+            background: rgba(6, 8, 13, 0.88);
+            border: 1px solid #1a2a1a;
+            padding: 10px;
+            z-index: 10;
+            text-align: center;
+        }
+
+        .spd-num {
+            font-family: 'Orbitron', monospace;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--lime);
+        }
+
+        .spd-arc-bg {
+            stroke: #1a2a1a;
+            stroke-width: 5;
+            fill: none;
+        }
+
+        .spd-arc-fill {
+            stroke: var(--lime);
+            stroke-width: 5;
+            fill: none;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.1s;
+        }
+
+        /* ══ RIGHT PANEL UI ══ */
+        .mode-badge {
+            margin: 10px;
+            padding: 7px 10px;
+            border: 1px solid var(--green);
+            background: rgba(0, 255, 136, 0.05);
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--green);
+            letter-spacing: 2px;
+        }
+
+        .mode-badge.ra {
+            border-color: var(--red);
+            color: var(--red);
+            background: rgba(255, 51, 85, 0.05);
+        }
+
+        .mode-badge.s {
+            border-color: var(--warn);
+            color: var(--warn);
+            background: rgba(255, 140, 0, 0.05);
+        }
+
+        .key-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3px;
+            margin-bottom: 6px;
+        }
+
+        .key {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            padding: 4px 3px;
+            text-align: center;
+            font-size: 10px;
+        }
+
+        .key.on {
+            background: rgba(0, 229, 255, 0.15);
+            border-color: var(--cyan);
+            color: var(--cyan);
+        }
+
+        .key.lime-key.on {
+            background: rgba(170, 221, 68, 0.15);
+            border-color: var(--lime);
+            color: var(--lime);
+        }
+
+        .key.empty {
+            border-color: transparent;
+            background: transparent;
+        }
+
+        /* ══ STATUS BAR ══ */
+        .sbar {
+            height: 20px;
+            background: var(--lime);
+            display: flex;
+            align-items: center;
+            padding: 0 14px;
+            gap: 18px;
+            flex-shrink: 0;
+        }
+
+        .si {
+            font-size: 9px;
+            color: #000;
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            gap: 4px;
+        }
+
+        .si span:first-child {
+            opacity: 0.6;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">
+        <div class="logo">4WD·<em>GIMBAL</em>BOT <span style="font-size:9px;opacity:0.35;font-weight:400;">// v1.1
+                STABLE</span></div>
+        <div class="hdr-stats">
+            <div class="hs">
+                <div class="hsd g"></div><span id="h-mode">TRACKING</span>
+            </div>
+            <div class="hs">
+                <div class="hsd c"></div><span>YOLOv8·SIM</span>
+            </div>
+            <div class="hs">
+                <div class="hsd g"></div><span id="h-drive">IDLE</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="workspace">
+        <div class="lp">
+            <div class="sec">
+                <div class="sec-t">// Gimbal Angles</div>
+                <div class="gpair">
+                    <div class="mg">
+                        <div class="mgl">PAN</div>
+                        <div class="mgv" id="pan-v">0.0</div>
+                        <div class="mgu">DEG</div>
+                    </div>
+                    <div class="mg">
+                        <div class="mgl">TILT</div>
+                        <div class="mgv" id="tlt-v">0.0</div>
+                        <div class="mgu">DEG</div>
+                    </div>
+                </div>
+            </div>
+            <div class="sec">
+                <div class="sec-t">// PID Controller</div>
+                <div class="brow">
+                    <div class="brl"><span>ERR X</span><span id="p-ex">0</span></div>
+                    <div class="bt">
+                        <div class="bf" id="p-exb" style="width:50%;background:var(--cyan)"></div>
+                    </div>
+                </div>
+                <div class="brow">
+                    <div class="brl"><span>OUT X</span><span id="p-ox">0.00</span></div>
+                    <div class="bt">
+                        <div class="bf" id="p-oxb" style="width:50%;background:var(--green)"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="sec">
+                <div class="sec-t">// Chassis Physics</div>
+                <div class="dr"><span class="dl">Speed</span><span class="dv g" id="c-spd">0</span></div>
+                <div class="dr"><span class="dl">Heading</span><span class="dv c" id="c-hdg">0°</span></div>
+            </div>
+        </div>
+
+        <div class="vp">
+            <canvas id="c3d"></canvas>
+            <div class="vbtns">
+                <button class="vb on" id="vb-iso" onclick="setView('iso')">⬡ ISO</button>
+                <button class="vb" id="vb-front" onclick="setView('front')">▣ FRONT</button>
+                <button class="vb" id="vb-top" onclick="setView('top')">▣ TOP</button>
+                <button class="vb" id="vb-chase" onclick="setView('chase')">⬡ CHASE CAM</button>
+                <button class="vb" id="vb-gimbal" onclick="setView('gimbal')">🔍 GIMBAL CAM</button>
+            </div>
+            <div class="camfeed">
+                <div class="cftop"><span class="recdot"></span>RPi CAM — AI FEED <span id="cf-conf"
+                        style="margin-left:10px">CONF: —</span></div>
+                <canvas id="cam-cvs" width="256" height="192"></canvas>
+            </div>
+            <div class="motor-hud">
+                <div style="font-size:8px; color:var(--lime); margin-bottom:5px">// WHEEL MOTORS</div>
+                <div id="mfl-v" style="font-size:9px">FL: 0%</div>
+                <div id="mfr-v" style="font-size:9px">FR: 0%</div>
+            </div>
+            <div class="speed-hud">
+                <div class="spd-num" id="spd-n">0</div>
+                <div style="font-size:8px;opacity:0.4">cm/s</div>
+            </div>
+        </div>
+
+        <div class="rp">
+            <div class="mode-badge" id="mb">SEARCHING</div>
+            <div class="sec">
+                <div class="sec-t">// Target Select</div>
+                <button class="vb on tsel" style="width:100%;margin-bottom:3px" onclick="setTarget('all', this)">🎯 ALL</button>
+                <button class="vb tsel" style="width:100%" onclick="setTarget('bottle', this)">🍾 BOTTLE</button>
+            </div>
+            <div class="sec">
+                <div class="sec-t">// DRIVE (Arrows/WASD)</div>
+                <div class="key-grid">
+                    <div class="key empty"></div>
+                    <div class="key lime-key" id="kU">W</div>
+                    <div class="key empty"></div>
+                    <div class="key lime-key" id="kL">A</div>
+                    <div class="key lime-key" id="kD">S</div>
+                    <div class="key lime-key" id="kR">D</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sbar">
+        <div class="si"><span>PAN</span><span id="sb-pan">0.0°</span></div>
+        <div class="si"><span>TRACK</span><span id="sb-trk">SEARCHING</span></div>
+        <div class="si" style="margin-left:auto"><span>4WD GimbalBot — Build v1.1 Corrected</span></div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Logic fixes applied: 
+        // 1. Fixed Gimbal Cam "lookAt" direction (-Z instead of +Z)
+        // 2. Added panel overflow protection for smaller screens
+        // 3. Ground plane offset to prevent Z-fighting flickering
+        // 4. Improved Kalman prediction stability
+
+        const canvas3d = document.getElementById('c3d');
+        const renderer = new THREE.WebGLRenderer({ canvas: canvas3d, antialias: true });
+        renderer.setClearColor(0x06080d);
+        renderer.shadowMap.enabled = true;
+
+        const scene = new THREE.Scene();
+        const cam3d = new THREE.PerspectiveCamera(42, 1, 0.1, 500);
+        cam3d.position.set(0, 25, 40);
+
+        scene.add(new THREE.AmbientLight(0x445566, 1.2));
+        const sun = new THREE.DirectionalLight(0xffffff, 1.5);
+        sun.position.set(10, 30, 10);
+        sun.castShadow = true;
+        scene.add(sun);
+
+        // Ground with small offset to avoid Z-fighting with grid
+        const gnd = new THREE.Mesh(new THREE.PlaneGeometry(1000, 1000), new THREE.MeshStandardMaterial({ color: 0x080b0e }));
+        gnd.rotation.x = -Math.PI / 2;
+        gnd.position.y = -0.02;
+        gnd.receiveShadow = true;
+        scene.add(gnd);
+        scene.add(new THREE.GridHelper(1000, 100, 0x112233, 0x0a1118));
+
+        // Fixed Arena Walls (10m x 10m == 1000x1000cm)
+        const wallMat = new THREE.MeshStandardMaterial({ color: 0x112233, transparent: true, opacity: 0.25, side: THREE.DoubleSide });
+        const wallH = new THREE.Mesh(new THREE.BoxGeometry(1000, 20, 2), wallMat);
+        const wallV = new THREE.Mesh(new THREE.BoxGeometry(2, 20, 1000), wallMat);
+        const wallN = wallH.clone(); wallN.position.set(0, 10, -500);
+        const wallS = wallH.clone(); wallS.position.set(0, 10, 500);
+        const wallE = wallV.clone(); wallE.position.set(500, 10, 0);
+        const wallW = wallV.clone(); wallW.position.set(-500, 10, 0);
+        scene.add(wallN, wallS, wallE, wallW);
+
+        // CHASSIS MOCKUP
+        const CHASSIS = new THREE.Group();
+        scene.add(CHASSIS);
+        const bodyBox = new THREE.Mesh(new THREE.BoxGeometry(18, 4, 24), new THREE.MeshStandardMaterial({ color: 0x1a1a1a }));
+        bodyBox.position.y = 4;
+        CHASSIS.add(bodyBox);
+
+        // WHEELS
+        const wheelGeo = new THREE.CylinderGeometry(3, 3, 2, 16);
+        wheelGeo.rotateZ(Math.PI / 2);
+        const wheelMat = new THREE.MeshStandardMaterial({ color: 0x050505 });
+        const wFL = new THREE.Mesh(wheelGeo, wheelMat); wFL.position.set(-10, 3, 8);
+        const wFR = new THREE.Mesh(wheelGeo, wheelMat); wFR.position.set(10, 3, 8);
+        const wBL = new THREE.Mesh(wheelGeo, wheelMat); wBL.position.set(-10, 3, -8);
+        const wBR = new THREE.Mesh(wheelGeo, wheelMat); wBR.position.set(10, 3, -8);
+        CHASSIS.add(wFL, wFR, wBL, wBR);
+
+        // GIMBAL MOCKUP
+        const GIMBAL_ROOT = new THREE.Group();
+        GIMBAL_ROOT.position.set(0, 5, -2);
+        CHASSIS.add(GIMBAL_ROOT);
+        const TILT_GROUP = new THREE.Group();
+        TILT_GROUP.position.y = 5;
+        GIMBAL_ROOT.add(TILT_GROUP);
+        
+        const head = new THREE.Group();
+        TILT_GROUP.add(head);
+        const headBox = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 3), new THREE.MeshStandardMaterial({ color: 0x00e5ff }));
+        head.add(headBox);
+        const lensGeo = new THREE.CylinderGeometry(0.8, 0.8, 1.5, 16);
+        lensGeo.rotateX(Math.PI / 2); // Point forward along +Z
+        const lens = new THREE.Mesh(lensGeo, new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        lens.position.set(0, 0, 2.25);
+        head.add(lens);
+
+        // TRUE TRACKING CAMERA
+        const trackCam = new THREE.PerspectiveCamera(42, 256/192, 0.1, 500);
+        trackCam.position.set(0, 0, 1.5); // Push inside/slight out
+        trackCam.rotation.y = Math.PI; // Three.js cameras look -Z, our gimbal +Z is forward, so flip 180 to look out
+        TILT_GROUP.add(trackCam);
+
+        // TARGET OBJECT (BOTTLE)
+        const targetMesh = new THREE.Mesh(
+            new THREE.CylinderGeometry(1.2, 1.2, 5, 16),
+            new THREE.MeshStandardMaterial({ color: 0xff3355, roughness: 0.6, transparent: true, opacity: 0.8 })
+        );
+        
+        // Exact center tracking sphere
+        const trackingSphere = new THREE.Mesh(
+            new THREE.SphereGeometry(0.8, 16, 16), 
+            new THREE.MeshBasicMaterial({ color: 0xffff00 }) // Bright yellow
+        );
+        targetMesh.add(trackingSphere);
+        
+        targetMesh.position.set(0, 2.5, 30);
+        scene.add(targetMesh);
+
+        // MOUSE DRAG & PAN LOGIC
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        let isDragging = false;
+        let isPanning = false;
+        let lastMouseX = 0, lastMouseY = 0;
+        let camPanX = 0, camPanZ = 0;
+        let camRotA = Math.PI / 4;
+        let camRotP = Math.PI / 4;
+
+        document.getElementById('c3d').addEventListener('pointerdown', (e) => {
+            const rect = canvas3d.parentElement.getBoundingClientRect();
+            mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+            mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+            raycaster.setFromCamera(mouse, cam3d);
+            const intersects = raycaster.intersectObject(targetMesh);
+            if (intersects.length > 0) {
+                isDragging = true;
+            } else {
+                isPanning = true;
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (isDragging) {
+                const rect = canvas3d.parentElement.getBoundingClientRect();
+                mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+                raycaster.setFromCamera(mouse, cam3d);
+                const intersects = raycaster.intersectObject(gnd);
+                if (intersects.length > 0) {
+                    targetMesh.position.copy(intersects[0].point);
+                    targetMesh.position.x = Math.max(-490, Math.min(490, targetMesh.position.x));
+                    targetMesh.position.z = Math.max(-490, Math.min(490, targetMesh.position.z));
+                    targetMesh.position.y = 2.5;
+                }
+            } else if (isPanning) {
+                let dx = e.clientX - lastMouseX;
+                let dy = e.clientY - lastMouseY;
+                if (e.shiftKey) {
+                    camRotA -= dx * 0.005;
+                    camRotP += dy * 0.005;
+                    camRotP = Math.max(0.05, Math.min(Math.PI / 2 - 0.05, camRotP));
+                } else {
+                    let fX = -Math.sin(camRotA);
+                    let fZ = -Math.cos(camRotA);
+                    let rX = Math.cos(camRotA);
+                    let rZ = -Math.sin(camRotA);
+                    camPanX -= (rX * dx + fX * dy) * 0.15;
+                    camPanZ -= (rZ * dx + fZ * dy) * 0.15;
+                }
+                lastMouseX = e.clientX;
+                lastMouseY = e.clientY;
+            }
+        });
+
+        window.addEventListener('pointerup', () => { 
+            isDragging = false; 
+            isPanning = false;
+        });
+
+        // WORLD ZOOM
+        let worldCamZoom = 1.0;
+        canvas3d.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            worldCamZoom -= e.deltaY * 0.001;
+            worldCamZoom = Math.max(0.2, Math.min(5.0, worldCamZoom));
+            cam3d.zoom = worldCamZoom;
+            cam3d.updateProjectionMatrix();
+        });
+
+        // PHYSICS & CONTROL
+        const phys = { speed: 0, turn: 0, heading: 0, px: 0, pz: 0 };
+        const keys = { u: 0, d: 0, l: 0, r: 0 };
+        let gimbalX = 128, gimbalY = 96, panDeg = 0, tiltDeg = 0;
+        let currentView = 'iso';
+
+        // KALMAN FILTER
+        class KalmanFilter {
+            constructor(q, r, p, x) {
+                this.q = q; // process noise
+                this.r = r; // measurement noise
+                this.p = p; // estimation error
+                this.x = x; // value
+            }
+            update(measurement) {
+                this.p = this.p + this.q;
+                let k = this.p / (this.p + this.r);
+                this.x = this.x + k * (measurement - this.x);
+                this.p = (1 - k) * this.p;
+                return this.x;
+            }
+        }
+        const kfPan = new KalmanFilter(0.01, 1.5, 1, 0);
+        const kfTilt = new KalmanFilter(0.01, 1.5, 1, 0);
+
+        // AI SETUP
+        const CFG = { FW: 256, FH: 192, KP: 0.15, KD: 0.005 };
+        let currentTarget = 'all';
+        let targetVelocity = new THREE.Vector3();
+        let currentTargetVel = new THREE.Vector3();
+        let moveTimer = 0;
+        let targetVisible = true; // Sim starts inherently tracking
+
+        function setTarget(t, btn) {
+            currentTarget = t;
+            document.querySelectorAll('.tsel').forEach(b => b.classList.remove('on'));
+            if (btn) btn.classList.add('on');
+        }
+
+        // DRIVE INPUT
+        window.onkeydown = (e) => {
+            let k = e.key.toLowerCase();
+            if (k === 'arrowup' || k === 'w') { keys.u = 1; document.getElementById('kU').classList.add('on'); }
+            if (k === 'arrowdown' || k === 's') { keys.d = 1; document.getElementById('kD').classList.add('on'); }
+            if (k === 'arrowleft' || k === 'a') { keys.l = 1; document.getElementById('kL').classList.add('on'); }
+            if (k === 'arrowright' || k === 'd') { keys.r = 1; document.getElementById('kR').classList.add('on'); }
+        };
+        window.onkeyup = (e) => {
+            let k = e.key.toLowerCase();
+            if (k === 'arrowup' || k === 'w') { keys.u = 0; document.getElementById('kU').classList.remove('on'); }
+            if (k === 'arrowdown' || k === 's') { keys.d = 0; document.getElementById('kD').classList.remove('on'); }
+            if (k === 'arrowleft' || k === 'a') { keys.l = 0; document.getElementById('kL').classList.remove('on'); }
+            if (k === 'arrowright' || k === 'd') { keys.r = 0; document.getElementById('kR').classList.remove('on'); }
+        };
+
+        function setView(v) {
+            currentView = v;
+            document.querySelectorAll('.vb').forEach(b => b.classList.remove('on'));
+            document.getElementById('vb-' + v).classList.add('on');
+        }
+
+        function updateChassis(dt) {
+            let manualOverride = keys.u || keys.d || keys.l || keys.r;
+
+            if (!manualOverride) {
+                if (targetVisible) {
+                    // Auto track the object
+                    let dx = targetMesh.position.x - phys.px;
+                    let dz = targetMesh.position.z - phys.pz;
+                    let dist = Math.hypot(dx, dz);
+                    
+                    if (dist > 20) { 
+                        // Pursue Target
+                        let targetHeading = Math.atan2(dx, dz);
+                        let angleDiff = targetHeading - phys.heading;
+                        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+                        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+                        
+                        if (angleDiff > 0.1) phys.turn = 1.2;
+                        else if (angleDiff < -0.1) phys.turn = -1.2;
+                        else phys.turn *= 0.8;
+                        
+                        if (Math.abs(angleDiff) < 0.5) phys.speed = Math.min(phys.speed + 8 * dt, 14);
+                        else phys.speed *= 0.95;
+                    } else if (dist < 10) {
+                        // Back up if too close
+                        phys.speed = Math.max(phys.speed - 8 * dt, -8);
+                        phys.turn *= 0.8;
+                    } else {
+                        phys.speed *= 0.9;
+                        phys.turn *= 0.8;
+                    }
+                } else {
+                    // Target not in gimbal view, STOP auto-pursuit and SPIN TO SEARCH
+                    phys.speed *= 0.9;
+                    phys.turn = 1.0; // Rotate chassis sweeping FOV
+                }
+            } else {
+                if (keys.u) phys.speed = Math.min(phys.speed + 8 * dt, 18);
+                else if (keys.d) phys.speed = Math.max(phys.speed - 8 * dt, -10);
+                else phys.speed *= 0.95;
+
+                let steerDir = (phys.speed < -0.1) ? -1 : 1;
+                if (keys.l) phys.turn = -0.5 * steerDir;
+                else if (keys.r) phys.turn = 0.5 * steerDir;
+                else phys.turn *= 0.8;
+            }
+
+            phys.heading += phys.turn * dt * 1.5; // True Skid-Steer allows in-place rotation
+            phys.px += Math.sin(phys.heading) * phys.speed * dt;
+            phys.pz += Math.cos(phys.heading) * phys.speed * dt;
+
+            // Constrain chassis physically
+            phys.px = Math.max(-480, Math.min(480, phys.px));
+            phys.pz = Math.max(-480, Math.min(480, phys.pz));
+
+            // Circle collision target vs chassis
+            let ctx = targetMesh.position.x - phys.px;
+            let ctz = targetMesh.position.z - phys.pz;
+            let cdist = Math.hypot(ctx, ctz);
+            let minDist = 20; 
+            if (cdist < minDist && !isDragging) {
+                let pushFactor = (minDist - cdist) / cdist;
+                targetMesh.position.x += ctx * pushFactor;
+                targetMesh.position.z += ctz * pushFactor;
+                
+                // Explode velocity away from heavily stuck chassis
+                targetVelocity.x = (ctx / cdist) * 20;
+                targetVelocity.z = (ctz / cdist) * 20;
+                currentTargetVel.x = targetVelocity.x;
+                currentTargetVel.z = targetVelocity.z;
+                
+                // Keep target inside bounds after pushing
+                targetMesh.position.x = Math.max(-490, Math.min(490, targetMesh.position.x));
+                targetMesh.position.z = Math.max(-490, Math.min(490, targetMesh.position.z));
+            }
+
+            CHASSIS.position.set(phys.px, 0, phys.pz);
+            CHASSIS.rotation.y = phys.heading;
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const dt = 0.016;
+
+            // True Tracking & Target Physics
+            if (!isDragging && currentTarget === 'all') {
+                moveTimer -= dt;
+                
+                let dx = targetMesh.position.x - phys.px;
+                let dz = targetMesh.position.z - phys.pz;
+                let dist = Math.hypot(dx, dz);
+
+                // Panic immediately if car gets too close and we aren't already fleeing
+                if (dist < 40 && moveTimer > 0.5) {
+                    moveTimer = 0; 
+                }
+
+                if (moveTimer <= 0) {
+                    let speed = 6 + Math.random() * 6; // Lazy relaxed wander
+                    let angle = Math.random() * Math.PI * 2;
+                    let timer = 1.5 + Math.random();
+                    
+                    if (dist < 40) {
+                        // Flee the robot with sudden frantic movements
+                        let ex = dx, ez = dz;
+                        let pad = 120; // Sense walls approaching
+                        
+                        // Push evasion vector directly away from borders to avoid corners
+                        if (targetMesh.position.x > 500 - pad) ex -= 100;
+                        if (targetMesh.position.x < -500 + pad) ex += 100;
+                        if (targetMesh.position.z > 500 - pad) ez -= 100;
+                        if (targetMesh.position.z < -500 + pad) ez += 100;
+
+                        let angleAway = Math.atan2(ex, ez);
+                        angle = angleAway + (Math.random() - 0.5) * 1.5; // Escapes, zig-zagging
+                        speed = 18 + Math.random() * 8; // Burst of speed
+                        timer = 0.3 + Math.random() * 0.4; // Changes direction rapidly
+                    }
+
+                    targetVelocity.set(Math.sin(angle) * speed, 0, Math.cos(angle) * speed);
+                    moveTimer = timer;
+                }
+
+                currentTargetVel.lerp(targetVelocity, dt * 2.5);
+                targetMesh.position.addScaledVector(currentTargetVel, dt);
+                
+                // Absolute map limits (Force explicit bounce to avoid infinite edge looping)
+                if (targetMesh.position.x > 490) { targetMesh.position.x = 490; targetVelocity.x = -Math.abs(targetVelocity.x); currentTargetVel.x = -Math.abs(currentTargetVel.x); }
+                if (targetMesh.position.x < -490) { targetMesh.position.x = -490; targetVelocity.x = Math.abs(targetVelocity.x); currentTargetVel.x = Math.abs(currentTargetVel.x); }
+                if (targetMesh.position.z > 490) { targetMesh.position.z = 490; targetVelocity.z = -Math.abs(targetVelocity.z); currentTargetVel.z = -Math.abs(currentTargetVel.z); }
+                if (targetMesh.position.z < -490) { targetMesh.position.z = -490; targetVelocity.z = Math.abs(targetVelocity.z); currentTargetVel.z = Math.abs(currentTargetVel.z); }
+            }
+
+            updateChassis(dt);
+
+            // Update Gimbal World Matrices sequentially for tracking prediction
+            CHASSIS.updateMatrixWorld(true);
+            
+            // True 3D Point-to-Point Gimbal Aiming
+            let targetPan = 0;
+            let targetTilt = 0;
+            
+            const targetPos = new THREE.Vector3();
+            targetMesh.getWorldPosition(targetPos);
+
+            if (targetVisible) {
+                const localTarget = targetPos.clone();
+                CHASSIS.worldToLocal(localTarget); // relative to CHASSIS
+                
+                // GIMBAL_ROOT is at (0, 5, -2) local. Get vector from gimbal base to target:
+                let gx = localTarget.x - 0;
+                let gz = localTarget.z - (-2);
+                let gy = localTarget.y - 5;
+                
+                targetPan = Math.atan2(gx, gz) * 180 / Math.PI;
+                let distXZ = Math.hypot(gx, gz);
+                targetTilt = Math.atan2(-gy, distXZ) * 180 / Math.PI; // positive tilt is down
+                
+                // Handle wrap-around to prevent aggressive 360 spins inside Kalman
+                while (targetPan - kfPan.x > 180) targetPan -= 360;
+                while (targetPan - kfPan.x < -180) targetPan += 360;
+            } else {
+                // If lost, sweep the camera physically to search the surroundings
+                let sweepTime = performance.now() / 600;
+                targetPan = Math.sin(sweepTime) * 120; // 120 deg sweep
+                targetTilt = Math.sin(sweepTime * 1.5) * 10;
+            }
+
+            let fPan = kfPan.update(targetPan);
+            let fTilt = kfTilt.update(targetTilt);
+            
+            panDeg = Math.max(-120, Math.min(120, fPan));
+            tiltDeg = Math.max(-45, Math.min(45, fTilt));
+            
+            GIMBAL_ROOT.rotation.y = panDeg * Math.PI / 180;
+            TILT_GROUP.rotation.x = tiltDeg * Math.PI / 180;
+
+            // Re-project into 2D AI Feed to render UI bounding boxes ALWAYS
+            const localPos = targetPos.clone();
+            trackCam.worldToLocal(localPos);
+            let tx = -100, ty = -100; // default off-screen
+            let ex = 0, ey = 0;
+            
+            targetVisible = false;
+
+            if (localPos.z < -0.1) {
+                const projPos = targetPos.clone();
+                projPos.project(trackCam);
+                if (projPos.x > -1.2 && projPos.x < 1.2 && projPos.y > -1.2 && projPos.y < 1.2) {
+                    targetVisible = true;
+                    tx = (projPos.x * 0.5 + 0.5) * 256;
+                    ty = (-(projPos.y) * 0.5 + 0.5) * 192;
+                    ex = tx - 128; 
+                    ey = ty - 96;  
+                }
+            }
+
+            GIMBAL_ROOT.rotation.y = panDeg * Math.PI / 180;
+            TILT_GROUP.rotation.x = tiltDeg * Math.PI / 180;
+
+            // Viewport Logic
+            cam3d.up.set(0, 1, 0); // reset up vector
+            if (currentView === 'chase') {
+                const cx = phys.px - Math.sin(phys.heading) * 30;
+                const cz = phys.pz - Math.cos(phys.heading) * 30;
+                cam3d.position.set(cx, 15, cz);
+                cam3d.lookAt(phys.px, 5, phys.pz);
+            } else if (currentView === 'gimbal') {
+                const gPos = new THREE.Vector3();
+                head.getWorldPosition(gPos);
+                // The front of the chassis is +Z. We want Gimbal pointing in its forward direction
+                const lookDir = new THREE.Vector3(0, 0, 1).applyQuaternion(TILT_GROUP.getWorldQuaternion(new THREE.Quaternion()));
+                cam3d.position.copy(gPos).add(lookDir.clone().multiplyScalar(2.5)); // push camera out of the box
+                cam3d.lookAt(gPos.x + lookDir.x * 10, gPos.y + lookDir.y * 10, gPos.z + lookDir.z * 10);
+            } else if (currentView === 'front') {
+                const cx = phys.px + Math.sin(phys.heading) * 40;
+                const cz = phys.pz + Math.cos(phys.heading) * 40;
+                cam3d.position.set(cx, 8, cz);
+                cam3d.lookAt(phys.px, 3, phys.pz);
+            } else if (currentView === 'top') {
+                cam3d.position.set(phys.px, 80, phys.pz);
+                cam3d.up.set(Math.sin(phys.heading), 0, Math.cos(phys.heading));
+                cam3d.lookAt(phys.px, 0, phys.pz);
+            } else { // iso by default is now freely orbited
+                let dist = 50; 
+                let cx = phys.px + camPanX + Math.sin(camRotA) * Math.cos(camRotP) * dist;
+                let cy = Math.sin(camRotP) * dist;
+                let cz = phys.pz + camPanZ + Math.cos(camRotA) * Math.cos(camRotP) * dist;
+                
+                cam3d.position.set(cx, cy, cz);
+                cam3d.lookAt(phys.px + camPanX, 0, phys.pz + camPanZ);
+            }
+
+            // Update UI
+            document.getElementById('pan-v').innerText = panDeg.toFixed(1);
+            document.getElementById('tlt-v').innerText = tiltDeg.toFixed(1);
+            document.getElementById('sb-pan').innerText = panDeg.toFixed(1) + '°';
+            document.getElementById('c-spd').innerText = Math.abs(Math.round(phys.speed));
+            document.getElementById('spd-n').innerText = Math.abs(Math.round(phys.speed));
+
+            // Wheel Motors
+            let mfl = Math.max(-100, Math.min(100, Math.round((phys.speed + phys.turn * 10) / 18 * 100)));
+            let mfr = Math.max(-100, Math.min(100, Math.round((phys.speed - phys.turn * 10) / 18 * 100)));
+            document.getElementById('mfl-v').innerText = `FL: ${mfl}%`;
+            document.getElementById('mfr-v').innerText = `FR: ${mfr}%`;
+            
+            // PID & Tracking Status
+            let isTracking = (tx !== -100) && Math.abs(ex) < 20 && Math.abs(ey) < 20;
+            document.getElementById('p-ex').innerText = Math.abs(Math.round(ex));
+            document.getElementById('p-exb').style.width = Math.min(100, Math.abs(ex)) + '%';
+            
+            let outX = ex * CFG.KP;
+            document.getElementById('p-ox').innerText = outX.toFixed(2);
+            document.getElementById('p-oxb').style.width = Math.min(100, Math.abs(outX) * 10) + '%';
+            
+            const mb = document.getElementById('mb');
+            if (targetVisible) {
+                mb.innerText = currentTarget === 'bottle' ? 'TRACKING BOTTLE' : 'TRACKING';
+                mb.className = 'mode-badge';
+                document.getElementById('sb-trk').innerText = 'LOCKED';
+                document.getElementById('h-mode') && (document.getElementById('h-mode').innerText = 'TRACKING');
+            } else {
+                mb.innerText = 'SEARCHING';
+                mb.className = 'mode-badge s';
+                document.getElementById('sb-trk').innerText = 'SEARCHING';
+                document.getElementById('h-mode') && (document.getElementById('h-mode').innerText = 'SEARCHING');
+            }
+
+            // AI Video Feed
+            const camCtx = document.getElementById('cam-cvs').getContext('2d');
+            camCtx.fillStyle = '#06080d';
+            camCtx.fillRect(0, 0, 256, 192);
+            camCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+            camCtx.beginPath(); camCtx.moveTo(128, 0); camCtx.lineTo(128, 192);
+            camCtx.moveTo(0, 96); camCtx.lineTo(256, 96); camCtx.stroke();
+            
+            camCtx.strokeStyle = isTracking ? '#00ff88' : '#00e5ff';
+            camCtx.lineWidth = 2;
+            if (tx !== -100) {
+                camCtx.strokeRect(tx - 20, ty - 30, 40, 60);
+            }
+            document.getElementById('cf-conf').innerText = `CONF: ${(isTracking ? 80 + Math.random()*15 : 40 + Math.random()*20).toFixed(1)}%`;
+
+            renderer.render(scene, cam3d);
+        }
+
+        function resize() {
+            const w = canvas3d.parentElement.clientWidth;
+            const h = canvas3d.parentElement.clientHeight;
+            renderer.setSize(w, h);
+            cam3d.aspect = w / h;
+            cam3d.updateProjectionMatrix();
+        }
+        window.onresize = resize;
+        resize();
+        animate();
+
+    </script>
+</body>
+
+</html>
