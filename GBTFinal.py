@@ -47,7 +47,6 @@ CFG = {
     "kalman_measurement_noise": 1e-2,
 }
 
-# Add this right below CFG so the text labels match the objects!
 CLASS_NAMES = {
     39: "bottle",
     47: "apple",
@@ -178,13 +177,13 @@ class GimbalTracker:
         self.last_bbox = None
         self.mode = "SEARCH"
 
-        # NEW: Timer to track how long the object has been lost
+        # Timer to track how long the object has been lost
         self.last_seen_time = time.time()
 
         self.alpha = 0.0
         self.manual_delta = np.zeros(2, dtype=np.float64)
 
-        # NEW: Memory bank for smooth continuous WASD movement
+        # Memory bank for smooth continuous WASD movement
         self.key_states = {'w': 0, 'a': 0, 's': 0, 'd': 0}
 
         self.pred_trail = deque(maxlen=40)
@@ -212,20 +211,19 @@ class GimbalTracker:
 
             # ==========================================================
             # CROSS-PLATFORM CAMERA SETUP
-            # Automatically detects your OS to prevent OpenCV camera crashes!
             # ==========================================================
             if sys.platform.startswith('win'):
-                # WINDOWS: DirectShow (Fastest startup, prevents freezing)
+                # WINDOWS
                 print("[INFO] Windows detected. Using DirectShow backend.")
                 self.cap = cv2.VideoCapture(source_int, cv2.CAP_DSHOW)
 
             elif sys.platform.startswith('darwin'):
-                # MAC: AVFoundation (Prevents macOS privacy blocks)
+                # MAC
                 print("[INFO] macOS detected. Using AVFoundation backend.")
                 self.cap = cv2.VideoCapture(source_int, cv2.CAP_AVFOUNDATION)
 
             elif sys.platform.startswith('linux'):
-                # LINUX: Video4Linux (Standard for Linux / Raspberry Pi)
+                # LINUX
                 print("[INFO] Linux detected. Using V4L2 backend.")
                 self.cap = cv2.VideoCapture(source_int, cv2.CAP_V4L2)
 
@@ -234,14 +232,6 @@ class GimbalTracker:
                 print("[INFO] OS not recognized. Using default camera backend.")
                 self.cap = cv2.VideoCapture(source_int)
 
-            # ─────────────────────────────────────────────────────────
-            # MANUAL OVERRIDE (If the auto-detect fails, comment out
-            # the IF block above and uncomment ONE of the lines below)
-            # ─────────────────────────────────────────────────────────
-            # self.cap = cv2.VideoCapture(source_int, cv2.CAP_DSHOW)        # Windows
-            # self.cap = cv2.VideoCapture(source_int, cv2.CAP_AVFOUNDATION) # Mac
-            # self.cap = cv2.VideoCapture(source_int, cv2.CAP_V4L2)         # Linux
-            # self.cap = cv2.VideoCapture(source_int)                       # Universal Default
 
         except ValueError:
             # If the source is a file path instead of a webcam number (e.g., "video.mp4")
@@ -316,8 +306,6 @@ class GimbalTracker:
             self.alpha = max(0.0, self.alpha - CFG["alpha_decay"])
 
     def _control_step(self, pred_x, pred_y, confidence):
-        # FIX: Calculate error relative to the blue crosshair's current position,
-        # NOT the static screen center. This makes it actively follow the target!
         error = np.array([pred_x - self.gimbal_pos[0], pred_y - self.gimbal_pos[1]], dtype=np.float64)
 
         # If the target is within the dead zone of the crosshair, stop moving
@@ -325,8 +313,6 @@ class GimbalTracker:
             error = np.zeros(2)
 
         auto_output = self.pid.update(error)
-        # FIX: Remove the confidence multiplier so the gimbal faithfully follows
-        # the yellow Kalman prediction even when the object is hidden!
         ai_weight = 1.0 - self.alpha
         final = self.alpha * self.manual_delta + ai_weight * auto_output
 
