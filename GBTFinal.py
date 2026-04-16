@@ -610,3 +610,5 @@ if __name__ == "__main__":
     # 2. START THE SYSTEM (It will use the updated targets!)
     tracker = GimbalTracker(source=source, use_yolo=use_yolo)
     tracker.run()
+        # Added by Aaryaa for testing
+    print("Tracker execution started")
